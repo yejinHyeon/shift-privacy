@@ -7,24 +7,63 @@
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #fff; color: #191919;
-         font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-  main { width: 100%; max-width: 360px; padding: 24px; text-align: center; }
-  .msg { font-size: 15px; color: #555; margin: 0 0 20px; }
-  .kakao { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 52px; border: 0; border-radius: 12px;
-           background: #FEE500; color: rgba(0,0,0,0.85); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+  body { margin: 0; min-height: 100vh; background: #fff; color: #191F28;
+         font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+         display: flex; justify-content: center; }
+  main { width: 100%; max-width: 400px; padding: 28px 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0; line-height: 1.4; }
+  .sub { font-size: 14px; color: #6B7684; margin: -8px 0 0; }
+
+  /* 카카오톡 대화방처럼 보이는 미리보기 */
+  .room { background: #BACEE0; border-radius: 16px; padding: 18px 16px; }
+  .row { display: flex; gap: 8px; align-items: flex-start; }
+  .me { width: 36px; height: 36px; border-radius: 14px; background: #3182F6; color: #fff; font-weight: 700; font-size: 17px;
+        display: flex; align-items: center; justify-content: center; flex: none; }
+  .name { font-size: 12px; color: #4A5360; margin: 0 0 4px 2px; }
+  .card { width: 230px; background: #fff; border-radius: 12px; overflow: hidden; }
+  .card img { display: block; width: 100%; aspect-ratio: 1024 / 500; object-fit: cover; }
+  .card .body { padding: 12px 12px 10px; }
+  .card .title { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+  .card .desc { font-size: 12px; color: #6B7684; margin: 0; line-height: 1.5; }
+  .card .btn { margin: 0 12px 12px; background: #F2F3F5; border-radius: 6px; text-align: center; font-size: 13px; padding: 9px 0; }
+
+  .kakao { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 54px; border: 0; border-radius: 14px;
+           background: #FEE500; color: rgba(0,0,0,0.85); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .kakao:active { transform: scale(0.98); }
   .kakao svg { width: 20px; height: 20px; }
-  .copy { margin-top: 16px; background: none; border: 0; color: #888; font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
+  .copy { background: none; border: 0; color: #8B95A1; font: inherit; font-size: 13px; cursor: pointer; padding: 6px; }
+  .copy:hover { color: #4E5968; }
+  .note { font-size: 13px; color: #3182F6; text-align: center; min-height: 18px; margin: 0; }
 </style>
 </head>
 <body>
 <main>
-  <p class="msg" id="msg">카카오톡으로 초대를 보내요</p>
+  <h1 id="title">카카오톡으로 초대 카드를 보내요</h1>
+  <p class="sub">대화방에는 이렇게 보여요</p>
+
+  <div class="room" aria-label="카카오톡 대화방 미리보기">
+    <div class="row">
+      <div class="me">시</div>
+      <div>
+        <p class="name">시프트</p>
+        <div class="card">
+          <img src="share-card.png" alt="" />
+          <div class="body">
+            <p class="title" id="cardTitle">우리 팀에 초대합니다</p>
+            <p class="desc" id="cardDesc">초대코드 ------ · 시프트 앱에서 입력하면 바로 참여해요</p>
+          </div>
+          <div class="btn">참여하기</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <button class="kakao" id="send">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3C6.48 3 2 6.54 2 10.9c0 2.8 1.86 5.26 4.66 6.66l-.95 3.5c-.08.3.26.54.52.37l4.16-2.76c.53.07 1.07.1 1.61.1 5.52 0 10-3.54 10-7.9S17.52 3 12 3z"/></svg>
     카카오톡으로 보내기
   </button>
-  <button class="copy" id="copy">카카오톡이 안 열리면 초대 문구 복사</button>
+  <p class="note" id="note"></p>
+  <button class="copy" id="copy">카카오톡이 안 열리면 초대 문구 복사하기</button>
 </main>
 <script>
   var q = new URLSearchParams(location.search);
@@ -33,18 +72,23 @@
   var code = (q.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   var base = location.origin + location.pathname.replace(/share\.html$/, '');
   var joinUrl = base + 'join.html?code=' + encodeURIComponent(code) + '&team=' + encodeURIComponent(team);
-  var msg = document.getElementById('msg');
+  var title = (team || '우리') + ' 팀에 초대합니다';
+  var desc = '초대코드 ' + code + ' · 시프트 앱에서 입력하면 바로 참여해요';
+  var note = document.getElementById('note');
+
+  document.getElementById('cardTitle').textContent = title;
+  document.getElementById('cardDesc').textContent = desc;
 
   try { if (window.Kakao && !Kakao.isInitialized()) Kakao.init(KAKAO_JS_KEY); } catch (e) {}
 
   function send() {
-    if (!code) { msg.textContent = '초대코드가 없어요. 앱에서 다시 눌러주세요'; return; }
-    if (!window.Kakao || !Kakao.isInitialized()) { msg.textContent = '카카오톡을 불러오지 못했어요. 아래에서 문구를 복사해주세요'; return; }
+    if (!code) { note.textContent = '초대코드가 없어요. 앱에서 다시 눌러주세요'; return; }
+    if (!window.Kakao || !Kakao.isInitialized()) { note.textContent = '카카오톡을 불러오지 못했어요. 아래에서 문구를 복사해주세요'; return; }
     Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
-        title: (team || '우리') + ' 팀에 초대합니다',
-        description: '초대코드 ' + code + ' · 시프트 앱에서 입력하면 바로 참여해요',
+        title: title,
+        description: desc,
         imageUrl: base + 'share-card.png',
         imageWidth: 1024,
         imageHeight: 500,
@@ -56,14 +100,14 @@
 
   document.getElementById('send').onclick = send;
   document.getElementById('copy').onclick = function () {
-    var text = '[시프트] ' + (team || '우리') + ' 팀에 초대합니다.\n시프트 앱에서 초대코드 ' + code + ' 를 입력하면 바로 참여할 수 있어요.\n' + joinUrl;
-    navigator.clipboard.writeText(text).then(function () { msg.textContent = '복사했어요. 카카오톡 대화방에 붙여넣어 보내주세요'; },
-      function () { msg.textContent = '초대코드: ' + code; });
+    var text = '[시프트] ' + title + '\n시프트 앱에서 초대코드 ' + code + ' 를 입력하면 바로 참여할 수 있어요.\n' + joinUrl;
+    navigator.clipboard.writeText(text).then(function () { note.textContent = '복사했어요. 카카오톡 대화방에 붙여넣어 보내주세요'; },
+      function () { note.textContent = '초대코드: ' + code; });
   };
 
-  // 폰에서는 이 화면을 거치지 않고 바로 카카오톡 공유를 연다 (컴퓨터는 창 차단 때문에 버튼을 눌러야 함)
+  // 폰에서는 바로 카카오톡 공유를 연다 (컴퓨터는 창 차단 때문에 버튼을 눌러야 함)
   if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    msg.textContent = '카카오톡을 여는 중이에요…';
+    note.textContent = '카카오톡을 여는 중이에요…';
     setTimeout(send, 150);
   }
 </script>
