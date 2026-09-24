@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>시프트 팀 초대</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+  :root { --text: #191F28; --text2: #6B7684; --accent: #3182F6; --surface: #F5F7FA; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fff; color: var(--text); font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+  main { width: 100%; max-width: 400px; padding: 32px 20px; text-align: center; }
+  .logo { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); color: #fff; font-weight: 700; font-size: 30px; display: grid; place-items: center; margin: 0 auto 18px; }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  p { color: var(--text2); font-size: 15px; margin: 0 0 22px; line-height: 1.6; }
+  .code { background: var(--surface); border-radius: 14px; padding: 16px; font-size: 32px; font-weight: 700; letter-spacing: 8px; margin-bottom: 22px; }
+  a.btn, button { display: block; width: 100%; border: 0; border-radius: 14px; padding: 16px; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; margin-bottom: 10px; }
+  .primary { background: var(--accent); color: #fff; }
+  .soft { background: var(--surface); color: var(--text); }
+  ol { text-align: left; color: var(--text2); font-size: 14px; line-height: 1.8; padding-left: 20px; margin: 18px 0 0; }
+  .note { font-size: 13px; min-height: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo">시</div>
+  <h1 id="title">팀에 초대받았어요</h1>
+  <p>시프트 앱에서 아래 초대코드를 입력하면<br />팀원으로 바로 참여해요</p>
+  <div class="code" id="code">------</div>
+  <a class="btn primary" id="open" href="#">시프트 앱에서 열기</a>
+  <button class="soft" id="copy">초대코드 복사</button>
+  <a class="btn soft" href="https://play.google.com/store/apps/details?id=com.hmin9.shiftswap">앱이 없어요 · 앱 받기</a>
+  <p class="note" id="note"></p>
+  <ol>
+    <li>시프트 앱을 열고 로그인해요</li>
+    <li><b>팀 참여하기 → 초대코드 입력</b>을 눌러요</li>
+    <li>위 코드를 넣으면 끝이에요</li>
+  </ol>
+</main>
+<script>
+  var q = new URLSearchParams(location.search);
+  var team = (q.get('team') || '').slice(0, 40);
+  var code = (q.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  document.getElementById('code').textContent = code || '------';
+  if (team) document.getElementById('title').textContent = team + ' 팀에 초대받았어요';
+  // 앱이 설치돼 있으면 초대코드 입력 화면이 코드가 채워진 채로 열린다
+  document.getElementById('open').href = 'shiftswap://invite?code=' + encodeURIComponent(code);
+  document.getElementById('copy').onclick = function () {
+    navigator.clipboard.writeText(code).then(function () { document.getElementById('note').textContent = '초대코드를 복사했어요'; },
+      function () { document.getElementById('note').textContent = '초대코드: ' + code; });
+  };
+</script>
+</body>
+</html>
