@@ -32,8 +32,9 @@
   <p class="note" id="note"></p>
 </main>
 <script>
-  var KAKAO_JS_KEY = '7c9ab182249294b1ee94d0c68f8e6400';
   var q = new URLSearchParams(location.search);
+  // 키 두 개 중 어느 것이 되는지 시험할 수 있게 (?key=2)
+  var KAKAO_JS_KEY = q.get('key') === '2' ? '90bc85e28512244eb08e74e52ff5617d' : '7c9ab182249294b1ee94d0c68f8e6400';
   var team = (q.get('team') || '').slice(0, 40);
   var code = (q.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   var base = location.origin + location.pathname.replace(/share\.html$/, '');
